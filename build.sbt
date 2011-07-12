@@ -1,12 +1,14 @@
 name := "simple-arm"
 
-version := "1.1.0"
+version := "1.1.1"
 
 organization := "com.rojoma"
 
 crossScalaVersions := Seq("2.8.1", "2.9.0", "2.9.0-1")
 
 libraryDependencies <++= scalaVersion { sv =>
+  // scalacheck is copypasted in from rojoma-json, but because of sbt
+  // bug #82 it will have to remain until 0.10.1 is released.
   sv match {
     case "2.8.1" => Seq(
       "org.scala-tools.testing" % "scalacheck_2.8.1" % "1.8" % "optional",
