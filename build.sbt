@@ -4,6 +4,8 @@ version := "1.0.0"
 
 organization := "com.rojoma"
 
+crossScalaVersions := Seq("2.8.1", "2.9.0", "2.9.0-1")
+
 sourceGenerators in Compile <+= (sourceManaged in Compile) map { output =>
   def genUsing(n: Int): String = {
     val typeVars = (0 until n).map(i => ('A' + i).toChar).toIndexedSeq
