@@ -6,16 +6,17 @@ organization := "com.rojoma"
 
 crossScalaVersions := Seq("2.8.1", "2.9.0", "2.9.0-1")
 
+// This exists because of scala bug SI-4782 (see SBT issue 85).  If the bug is
+// fixed, or this project ever grows a compile-scope dependency, it can be
+// removed.
+unmanagedClasspath in Compile <+= (baseDirectory) map { root => Attributed.blank(root / "does-not-exist") }
+
 libraryDependencies <++= scalaVersion { sv =>
-  // scalacheck is copypasted in from rojoma-json, but because of sbt
-  // bug #82 it will have to remain until 0.10.1 is released.
   sv match {
     case "2.8.1" => Seq(
-      "org.scala-tools.testing" % "scalacheck_2.8.1" % "1.8" % "optional",
       "org.scalatest" % "scalatest_2.8.1" % "1.5.1" % "test"
     )
     case "2.9.0" | "2.9.0-1" => Seq(
-      "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.9" % "optional",
       "org.scalatest" % "scalatest_2.9.0" % "1.6.1" % "test"
     )
     case _ => error("Dependencies not set for scala version " + sv)
