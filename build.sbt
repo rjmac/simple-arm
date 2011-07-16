@@ -78,9 +78,3 @@ sourceGenerators in Compile <+= (sourceManaged in Compile) map { output =>
   Seq(outfile)
 }
 
-publishTo <<= (version) { version =>
-  val suffix = if(version.trim.endsWith("SNAPSHOT")) "snapshots" else "releases"
-  Some("Sonatype Nexus Repository Manager" at ("http://maven.rojoma.com/content/repositories/" + suffix + "/"))
-}
-
-credentials <+= baseDirectory map { root => Credentials(root / "nexus.credentials") }

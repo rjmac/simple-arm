@@ -1,4 +1,4 @@
 /target/
 /project/boot/
 /project/target/
-/nexus.credentials
+/publish.sbt
