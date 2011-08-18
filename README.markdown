@@ -8,19 +8,20 @@ and the `using` function:
 ```scala
 val linesCopied = for {
   in <- managed(new java.io.Reader(inName))
-  out <- managed(new java.io.Reader(outName))
+  out <- managed(new java.io.Writer(outName))
 } yield {
   copyLines(in, out)
 }
 
-val lines = using(new java.io.Reader(inName), new java.io.Writer(outName)) { (in, out) =>
+val linesCopied = using(new java.io.Reader(inName), new java.io.Writer(outName)) { (in, out) =>
   copyLines(in,out)
 }
 ```
 
-They are completely equivalent; the for-comprehension requires using
-`managed` but the `using` function separates the resource from its
-name.
+They are almost completely equivalent; the `for`-comprehension
+requires using `managed` but the `using` function separates the
+resource from its name.  In a `for`-comprehension, earlier resources
+are available at the time later ones are initialized, of course.
 
 Resource-management is defined as follows:
 
