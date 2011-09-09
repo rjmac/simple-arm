@@ -1,6 +1,6 @@
 name := "simple-arm"
 
-version := "1.1.4"
+version := "1.1.5"
 
 organization := "com.rojoma"
 

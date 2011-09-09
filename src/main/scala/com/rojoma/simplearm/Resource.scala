@@ -5,7 +5,7 @@ package simplearm
 
 import java.io.Closeable
 
-trait Resource[-A] {
+trait Resource[A] {
   def open(a: A) {}
   def close(a: A)
   def closeAbnormally(a: A, cause: Throwable) { close(a) }
@@ -20,8 +20,8 @@ sealed trait LowPriorityResourceImplicits {
    * This is the type class implementation for reflectively assuming a class with a close method is
    * a resource.
    */
-  implicit val reflectiveCloseableResource = new Resource[ReflectiveCloseable] {
-    def close(r: ReflectiveCloseable) = r.close()
+  implicit def reflectiveCloseableResource[A <: ReflectiveCloseable] = new Resource[A] {
+    def close(r: A) = r.close()
     override def toString = "Resource[{ def close() : Unit }]"
   }
 
@@ -32,38 +32,38 @@ sealed trait LowPriorityResourceImplicits {
    * This is the type class implementation for reflectively assuming a class with a dispose method is
    * a resource.
    */
-  implicit val reflectiveDisposableResource = new Resource[ReflectiveDisposable] {
-    def close(r: ReflectiveDisposable) = r.dispose()
+  implicit def reflectiveDisposableResource[A <: ReflectiveDisposable] = new Resource[A] {
+    def close(r: A) = r.dispose()
     override def toString = "Resource[{ def dispose() : Unit }]"
   }
 }
 
 sealed trait MediumPriorityResourceImplicits extends LowPriorityResourceImplicits {
-  implicit val closeableResource = new Resource[Closeable] {
-    def close(r: Closeable) = r.close()
+  implicit def closeableResource[A <: Closeable] = new Resource[A] {
+    def close(r: A) = r.close()
     override def toString = "Resource[java.io.Closeable]"
   }
   
   //Add All JDBC related handlers.
-  implicit val connectionResource = new Resource[java.sql.Connection] {
-    def close(r: java.sql.Connection) = r.close()
+  implicit def connectionResource[A <: java.sql.Connection] = new Resource[A] {
+    def close(r: A) = r.close()
     override def toString = "Resource[java.sql.Connection]"
   }
 
   // This will work for Statements, PreparedStatements and CallableStatements.
-  implicit val statementResource = new Resource[java.sql.Statement] {
-    def close(r: java.sql.Statement) = r.close()
+  implicit def statementResource[A <: java.sql.Statement] = new Resource[A] {
+    def close(r: A) = r.close()
     override def toString = "Resource[java.sql.Statement]"
   }
 
   // Also handles RowSet
-  implicit val resultSetResource = new Resource[java.sql.ResultSet] {
-    def close(r: java.sql.ResultSet) = r.close()
+  implicit def resultSetResource[A <: java.sql.ResultSet] = new Resource[A] {
+    def close(r: A) = r.close()
     override def toString = "Resource[java.sql.ResultSet]"
   }
 
-  implicit val pooledConnectionResource = new Resource[javax.sql.PooledConnection] {
-    def close(r: javax.sql.PooledConnection) = r.close()
+  implicit def pooledConnectionResource[A <: javax.sql.PooledConnection] = new Resource[A] {
+    def close(r: A) = r.close()
     override def toString = "Resource[javax.sql.PooledConnection]"
   }
 }
