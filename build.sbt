@@ -1,6 +1,6 @@
 name := "simple-arm"
 
-version := "1.1.2"
+version := "1.1.4"
 
 organization := "com.rojoma"
 
@@ -68,7 +68,7 @@ sourceGenerators in Compile <+= (sourceManaged in Compile) map { output =>
   try {
     f.write("package com.rojoma\n")
     f.write("package simplearm\n")
-    f.write("object util {\n")
+    f.write("package object util {\n")
     f.write("def managed[A: Resource](x: =>A) = new SimpleArm(x)\n\n")
     for(i <- 1 to 22) f.write(genUsing(i))
     f.write("}\n")

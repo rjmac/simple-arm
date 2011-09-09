@@ -42,3 +42,26 @@ Resource-management is defined as follows:
 
 Resources are acquired in left-to-right order and released in the
 opposite order.
+
+The `for`-comprehension version also has an `unmanaged` function
+available.  Because of the way the library works internally (the
+object returned by `managed` is not a proper monad at all), this does
+not work:
+
+```scala
+for {
+  a <- managed(resourceA(...))
+  val aPrime = f(a)
+  b <- managed(resourceB(...))
+} ...
+```
+
+Instead, create `aPrime` this way:
+
+```scala
+for {
+  a <- managed(resourceA(...))
+  aPrime <- unmanaged(f(a))
+  b <- managed(resourceB(...))
+} ...
+```
