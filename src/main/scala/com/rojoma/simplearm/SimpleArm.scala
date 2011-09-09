@@ -13,7 +13,12 @@ class SimpleArm[A](resource: => A)(implicit val ev: Resource[A]) {
       f(res)
     } catch {
       case e: Throwable =>
-        ev.closeAbnormally(res, e)
+        try {
+          ev.closeAbnormally(res, e)
+        } catch {
+          case secondaryException: Exception =>
+            ev.handleSecondaryException(e, secondaryException)
+        }
         throw e
     }
     ev.close(res)

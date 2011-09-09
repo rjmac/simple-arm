@@ -6,6 +6,8 @@ closes resources.  There are two ways to use it, for-comprehensions
 and the `using` function:
 
 ```scala
+import com.rojoma.simplearm.util._
+
 val linesCopied = for {
   in <- managed(new java.io.Reader(inName))
   out <- managed(new java.io.Writer(outName))
@@ -14,7 +16,7 @@ val linesCopied = for {
 }
 
 val linesCopied = using(new java.io.Reader(inName), new java.io.Writer(outName)) { (in, out) =>
-  copyLines(in,out)
+  copyLines(in, out)
 }
 ```
 
@@ -33,7 +35,10 @@ Resource-management is defined as follows:
 4. If the "whatever" returns normally, invoke `close` on the typeclass
    instance with it.  Otherwise, invoke `closeAbormally` with both the
    resource object and the exception.  By default, this simply defers
-   to `close`.
+   to `close`.  If `closeAbnormally` throws an `Exception` (i.e., not
+   an `Error` or other `Throwable`), `handleSecondaryException` is
+   called with both exceptions; by default this simply rethrows the
+   secondary exception.
 
 Resources are acquired in left-to-right order and released in the
 opposite order.
