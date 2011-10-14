@@ -1,11 +1,25 @@
 package com.rojoma
 package simplearm
 
-class SimpleArm[A](resource: => A)(implicit val ev: Resource[A]) {
+import util._
+
+abstract class SimpleArm[A] { self =>
   def foreach[U](f: A => U): Unit = flatMap(f)
   def map[B](f: A => B): B = flatMap(f)
   def withFilter(f: A => Boolean) = new FilteredArm(this, f)
 
+  def flatMap[B](f: A => B): B
+
+  def andThen[B: Resource](xform: A => B) = new SimpleArm[B] {
+    def flatMap[C](f: B => C): C = {
+      self.flatMap { a: A =>
+        using(xform(a))(f)
+      }
+    }
+  }
+}
+
+class UntransformedSimpleArm[A](resource: => A)(implicit val ev: Resource[A]) extends SimpleArm[A] {
   def flatMap[B](f: A => B): B = {
     val res = resource
     ev.open(res)

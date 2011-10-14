@@ -2,9 +2,7 @@ package com.rojoma.simplearm
 package util
 
 object unmanaged {
-  def apply[T](x: T) = new SimpleArm[T](x)(NoopResource.asInstanceOf[Resource[T]])
-
-  private val NoopResource = new Resource[Any] {
-    def close(x: Any) {}
+  def apply[A](a: A): SimpleArm[A] = new SimpleArm[A] {
+    def flatMap[B](f: A => B) = f(a)
   }
 }

@@ -30,6 +30,19 @@ class ForComprehensionTests extends FunSuite with MustMatchers {
     (res.result) must equal (List("opening hello", "opening goodbye", "inner", "closing goodbye normally", "closing hello normally"))
   }
 
+  test("Unmanaged resources do not break the flow") {
+    implicit val res = makeResource()
+    for {
+      f <- managed("hello")
+      gnu <- unmanaged("gnu")
+      g <- managed("goodbye")
+    } {
+      gnu must equal ("gnu")
+      res.mark("inner")
+    }
+    (res.result) must equal (List("opening hello", "opening goodbye", "inner", "closing goodbye normally", "closing hello normally"))
+  }
+
   test("resources are released abrnomally") {
     implicit val res = makeResource()
     breaking {
@@ -37,6 +50,22 @@ class ForComprehensionTests extends FunSuite with MustMatchers {
         f <- managed("hello")
         g <- managed("goodbye")
       } {
+        res.mark("inner")
+        break()
+      }
+    }
+    (res.result) must equal (List("opening hello", "opening goodbye", "inner", "closing goodbye due to com.rojoma.simplearm.Break", "closing hello due to com.rojoma.simplearm.Break"))
+  }
+
+  test("Unmanaged resources do not break the flow of abnormal release") {
+    implicit val res = makeResource()
+    breaking {
+      for {
+        f <- managed("hello")
+        gnu <- unmanaged("gnu")
+        g <- managed("goodbye")
+      } {
+        gnu must equal ("gnu")
         res.mark("inner")
         break()
       }

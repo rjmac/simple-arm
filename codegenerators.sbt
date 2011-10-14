@@ -69,7 +69,7 @@ sourceGenerators in Compile <+= (sourceManaged in Compile) map { output =>
     f.write("package com.rojoma\n")
     f.write("package simplearm\n")
     f.write("package object util {\n")
-    f.write("def managed[A: Resource](x: =>A) = new SimpleArm(x)\n\n")
+    f.write("def managed[A: Resource](x: =>A): SimpleArm[A] = new UntransformedSimpleArm(x)\n\n")
     for(i <- 1 to 22) f.write(genUsing(i))
     f.write("}\n")
   } finally {
