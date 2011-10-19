@@ -32,7 +32,7 @@ setting up SBT is as simple as
 ```scala
 resolvers += "rojoma.com" at "http://rjmac.github.com/maven/releases/"
 
-libraryDependencies += "com.rojoma" %% "simple-arm" % "1.1.7"
+libraryDependencies += "com.rojoma" %% "simple-arm" % "1.1.8"
 ```
 
 While for Maven, the pom snippets are:
@@ -49,7 +49,7 @@ While for Maven, the pom snippets are:
   <dependency>
     <groupId>com.rojoma</groupId>
     <artifactId>simple-arm_${scala.version}</artifactId>
-    <version>1.1.7</version>
+    <version>1.1.8</version>
   </dependency>
 </dependencies>
 ```
