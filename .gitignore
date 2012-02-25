@@ -1,4 +1,5 @@
 /target/
 /project/boot/
 /project/target/
+/project/project/target/
 /publish.sbt
