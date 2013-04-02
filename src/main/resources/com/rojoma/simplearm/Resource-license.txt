@@ -1,5 +1,5 @@
-This project contains some code from scala-arm, which is licenced
-under the:
+Classes compiled from Resource.scala are derived from scala-arm, which
+is licensed under the...
 
 SCALA LICENSE
 
