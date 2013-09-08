@@ -9,7 +9,31 @@ trait Resource[A] {
   def open(a: A) {}
   def close(a: A)
   def closeAbnormally(a: A, cause: Throwable) { close(a) }
-  def handleSecondaryException(primary: Throwable, secondary: Exception) = { throw secondary }
+  // On java pre-7, this throws the secondary exception; on java post-7,
+  // it adds the secondary to the primary's list of suppressed exceptions.
+  def handleSecondaryException(primary: Throwable, secondary: Exception) =
+    SecondaryExceptionHandler.defaultHandler(primary, secondary)
+}
+
+object SecondaryExceptionHandler {
+  val defaultHandler: (Throwable, Exception) => Nothing =
+    try {
+      Class.forName("com.rojoma.simplearm.Suppresser").newInstance().asInstanceOf[(Throwable, Exception) => Nothing]
+    } catch {
+      case _: ClassNotFoundException =>
+        new SecondaryThrower
+    }
+}
+
+class SecondaryThrower extends ((Throwable, Exception) => Nothing) {
+  def apply(primary: Throwable, secondary: Exception) = throw secondary
+}
+
+class Suppresser extends ((Throwable, Exception) => Nothing) {
+  def apply(primary: Throwable, secondary: Exception) = {
+    primary.addSuppressed(secondary)
+    throw primary
+  }
 }
 
 sealed trait LowPriorityResourceImplicits {
@@ -38,7 +62,14 @@ sealed trait LowPriorityResourceImplicits {
   }
 }
 
-sealed trait MediumPriorityResourceImplicits extends LowPriorityResourceImplicits {
+sealed trait SecondarilyMediumPriorityResourceImplicits extends LowPriorityResourceImplicits {
+  implicit def autoCloseableResource[A <: AutoCloseable] = new Resource[A] {
+    def close(r: A) = r.close()
+    override def toString = "Resource[java.lang.AutoCloseable]"
+  }
+}
+
+sealed trait MediumPriorityResourceImplicits extends SecondarilyMediumPriorityResourceImplicits {
   implicit def closeableResource[A <: Closeable] = new Resource[A] {
     def close(r: A) = r.close()
     override def toString = "Resource[java.io.Closeable]"
