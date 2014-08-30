@@ -17,11 +17,6 @@ previousArtifact := None /* Some("com.rojoma" % ("simple-arm_" + scalaBinaryVers
 
 scalacOptions ++= Seq("-feature", "-deprecation")
 
-// This exists because of scala bug SI-4782 (see SBT issue 85).  If the bug is
-// fixed, or this project ever grows a compile-scope dependency, it can be
-// removed.
-unmanagedClasspath in Compile <+= (baseDirectory) map { root => Attributed.blank(root / "does-not-exist") }
-
 libraryDependencies ++= Seq(
   "com.rojoma" %% "simple-arm" % "1.2.0" % "optional",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
