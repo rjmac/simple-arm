@@ -153,8 +153,8 @@ final class ResourceScope(val name: String = "anonymous") {
     * by this scope.  If this value is transferred to another scope, the other
     * resources will be transferred along with it.
     *
-    * @throws IllegalArgumentException if the value is already managed by this scope
-    * @throws IllegalArgumentException if any dependency is not managed by this scope
+    * @throws IllegalArgumentException if the value is already managed by this scope,
+    *      or if any value listed in `transitiveClose` is not.
     */
   def open[T](value: => T, transitiveClose: Seq[Any] = Nil)(implicit res: Resource[T]): T = {
     val tc = transitiveClose.toList
@@ -196,8 +196,8 @@ final class ResourceScope(val name: String = "anonymous") {
     * which refer to closable things, and which may be transferred to
     * other scopes.
     *
-    * @throws IllegalArgumentException if the value is already "managed" by this scope
-    * @throws IllegalArgumentException if any dependency is not managed by this scope
+    * @throws IllegalArgumentException if the value is already "managed" by this scope,
+    *      or if any value listed in `transitiveClose` is not.
     */
   def openUnmanaged[T](value: => T, transitiveClose: Seq[Any] = Nil) =
     open(value, transitiveClose)(Resource.Noop.asInstanceOf[Resource[T]])
