@@ -357,4 +357,56 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
       cr.foreach { cr => rs2.isManaged(cr) must be (true) }
     }
   }
+
+  test("Associated resources are closed when their parent unmanaged value is closed explicitly") {
+    implicit val res = makeResource()
+    using(new ResourceScope("test")) { rs =>
+      val result = rs.unmanagedWithAssociatedScope("inner") { rsi =>
+          rsi.open("inner")
+          new Object
+        }
+      (res.result) must equal (List("opening inner before", "opening inner after"))
+      rs.close(result)
+      (res.result) must equal (List("opening inner before", "opening inner after", "closing inner normally"))
+    }
+  }
+
+  test("Associated resources are closed when their parent unmanaged value is closed implicitly") {
+    implicit val res = makeResource()
+    using(new ResourceScope("test")) { rs =>
+      val result = rs.unmanagedWithAssociatedScope("inner") { rsi =>
+          rsi.open("inner")
+          new Object
+        }
+      (res.result) must equal (List("opening inner before", "opening inner after"))
+    }
+    (res.result) must equal (List("opening inner before", "opening inner after", "closing inner normally"))
+  }
+
+  test("Associated resources are closed promptly when unmanagedWithAssociatedResourceScope exits abnormally") {
+    implicit val res = makeResource()
+    using(new ResourceScope("test")) { rs =>
+      breaking {
+        rs.unmanagedWithAssociatedScope("inner") { rsi =>
+          rsi.open("inner")
+          break()
+        }
+      }
+      (res.result) must equal (List("opening inner before", "opening inner after", "closing inner due to com.rojoma.simplearm.v2.Break"))
+    }
+  }
+
+  test("Associated resources are closed promptly when unmanagedWithAssociatedResourceScope exits early") {
+    implicit val res = makeResource()
+    using(new ResourceScope("test")) { rs =>
+      def foo() {
+        rs.unmanagedWithAssociatedScope("inner") { rsi =>
+          rsi.open("inner")
+          return
+        }
+      }
+      foo()
+      (res.result) must equal (List("opening inner before", "opening inner after", "closing inner normally"))
+    }
+  }
 }

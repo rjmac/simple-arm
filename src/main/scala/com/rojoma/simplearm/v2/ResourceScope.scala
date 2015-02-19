@@ -239,7 +239,7 @@ final class ResourceScope(val name: String = "anonymous") {
     *
     * @throws IllegalArgumentException if the value is not managed by this scope
     */
-  def close(value: Any) {
+  private[this] def closeImpl(value: Any, cause: Option[Throwable]) {
     val nodes = synchronized { findTransitiveCloseNodes(value) }
     if(nodes eq null) throw new IllegalArgumentException("close of resource not managed by " + name)
 
@@ -294,7 +294,14 @@ final class ResourceScope(val name: String = "anonymous") {
       }
     }
 
-    continueClosing(nodes.length)
+    cause match {
+      case None => continueClosing(nodes.length)
+      case Some(t) => continueClosingAbnormally(nodes.length, t)
+    }
+  }
+
+  def close(value: Any) {
+    closeImpl(value, None)
   }
 
   private[this] def pop(): Node[_] = synchronized {
@@ -341,4 +348,34 @@ final class ResourceScope(val name: String = "anonymous") {
   }
 
   def isManaged(x: Any) = synchronized { managed.containsKey(x) }
+
+  /** Utility for creating an owned-but-unmanaged object with an associated managed scope.
+    * {{{
+    * using(new ResourceScope("scope")) { rs =>
+    *   val lines: Iterator[Line] = rs.unmanagedWithAssociatedScope("iterator scope") { itScope =>
+    *     val stream = itScope.open(new FileInputStream("/tmp/foo"))
+    *     linesOfFile(stream) // if this throws, stream will be closed before unmanagedWithAssociatedScope returns
+    *   }
+    *   rs.close(lines) // closes the associated FileInputStream
+    * }
+    * }}}
+    */
+  def unmanagedWithAssociatedScope[A](associatedScopeName: String)(f: ResourceScope => A): A = {
+    val tmpScope = open(new ResourceScope(associatedScopeName))
+    try {
+      openUnmanaged(f(tmpScope), transitiveClose = List(tmpScope))
+    } catch {
+      case control: ControlThrowable =>
+        close(tmpScope)
+        throw control
+      case cause: Throwable =>
+        try {
+          closeImpl(tmpScope, Some(cause))
+        } catch {
+          case t: Throwable =>
+            cause.addSuppressed(t)
+        }
+        throw cause
+    }
+  }
 }
