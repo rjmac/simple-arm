@@ -11,9 +11,10 @@ abstract class Managed[+A] { self =>
     * another `Managed`. */
   final def foreach[B](f: A => B): B = run(f)
 
-  /** Produces a `Managed` representing a resource extracted from this
-    * one.  The new resource is NOT MANAGED; only the original
-    * resource will be closed.
+  /** Produces a `Managed` representing a value extracted from this one.
+    * The new value DOES NOT HAVE AN ASSOCIATED `Resource` so it will
+    * not be separately closed!  Use `mapManaged` if the extracted
+    * resource should be independently managed.
     */
   final def map[B](mapper: A => B): Managed[B] = new Managed[B] {
     def run[C](f: B => C): C = self.run(f compose mapper)
@@ -34,6 +35,18 @@ abstract class Managed[+A] { self =>
   final def mapManaged[B](mapper: A => B)(implicit ev: Resource[B]): Managed[B] = new Managed[B] {
     def run[C](f: B => C): C = self.run { a => using(mapper(a))(f) }
   }
+
+  /** Applies a side-effect to the managed resource when it is run.
+    * The intent is to be used for things that require a `start` or
+    * other such activation call before they are fully usable.
+    * {{{
+    * for {
+    *   x <- managed(new A).and(_.start())
+    *   y <- managed(new B(x)) // by the time "new B" is called, x will have been started
+    * } doSomethingWith(x, y)
+    * }}}
+    */
+  final def and[B](op: A => B): Managed[A] = map { a => op(a); a }
 
   final def flatMap[B](flatMapper: A => Managed[B]): Managed[B] = new Managed[B] {
     def run[C](f: B => C) = self.run(flatMapper(_).run(f))

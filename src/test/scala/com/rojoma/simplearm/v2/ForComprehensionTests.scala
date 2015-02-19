@@ -28,6 +28,42 @@ class ForComprehensionTests extends FunSuite with MustMatchers {
     (res.result) must equal (List("opening hello before", "opening hello after", "opening goodbye before", "opening goodbye after", "inner", "closing goodbye normally", "closing hello normally"))
   }
 
+  test(".and's side effects occur in the right order") {
+    implicit val res = makeResource()
+    for {
+      f <- managed("a").and { _ => res.mark("and a") }
+      g <- managed("b").and { _ => res.mark("and b") }
+    } {
+      res.mark("inner")
+    }
+    (res.result) must equal (List("opening a before", "opening a after", "and a", "opening b before", "opening b after", "and b", "inner", "closing b normally", "closing a normally"))
+  }
+
+  test("A resource is closed normally if its .and returns") {
+    implicit val res = makeResource()
+    def foo() {
+      for {
+        f <- managed("a").and { _ => return }
+      } {
+        res.mark("inner")
+      }
+    }
+    foo()
+    (res.result) must equal (List("opening a before", "opening a after", "closing a normally"))
+  }
+
+  test("A resource is closed abnormally normally if its .and throws") {
+    implicit val res = makeResource()
+    breaking {
+      for {
+        f <- managed("a").and { _ => break() }
+      } {
+        res.mark("inner")
+      }
+    }
+    (res.result) must equal (List("opening a before", "opening a after", "closing a due to com.rojoma.simplearm.v2.Break"))
+  }
+
   test("Non-local return counts as a normal close") {
     implicit val res = makeResource()
     def foo() {
