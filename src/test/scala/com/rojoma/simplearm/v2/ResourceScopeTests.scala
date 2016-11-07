@@ -7,6 +7,7 @@ import org.scalatest.FunSuite
 import org.scalatest.MustMatchers
 import org.scalatest.prop.PropertyChecks
 import org.scalacheck.{Gen, Arbitrary}
+import org.scalacheck.rng.Seed
 
 import Break._
 import SomeCloseableResource._
@@ -310,10 +311,12 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
     loop(cr)
   }
 
-  private def crGen(nodeCount: Int): Gen[CloseableResource] = {
+  private def crGen(nodeCount: Int, seed: Long): Gen[CloseableResource] = {
     val nodes = new HashSet[CloseableResource]
+    var rng = Seed(seed)
+    def nextLong() = { var (l, s) = rng.long; rng = s; l }
     def nonterminalGen(p: Gen.Parameters): Gen[CloseableResource] = {
-      for(i <- 0 until nodeCount; nextDeps <- Gen.someOf(nodes).apply(p))
+      for(i <- 0 until nodeCount; nextDeps <- Gen.someOf(nodes).apply(p, Seed(nextLong())))
 	nodes += new CloseableResource(i, nextDeps)
       for(nextDeps <- Gen.someOf(nodes)) yield
 	new CloseableResource(nodeCount, nextDeps)
@@ -321,7 +324,12 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
     Gen.parameterized(nonterminalGen)
   }
 
-  private implicit val arbCR: Arbitrary[CloseableResource] = Arbitrary(Gen.sized(crGen))
+  private implicit val arbCR: Arbitrary[CloseableResource] = Arbitrary {
+      for {
+        s <- Arbitrary.arbitrary[Long]
+        v <- Gen.sized(crGen(_, s))
+      } yield v
+    }
 
   test("Resources are released in some valid order after a transfer") {
     forAll { (seed: Long, cr: CloseableResource) =>
