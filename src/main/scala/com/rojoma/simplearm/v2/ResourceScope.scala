@@ -37,6 +37,8 @@ object ResourceScope {
       }
     }
   }
+
+  private val anonymousScopeName = "anonymous"
 }
 
 /** A (managable) object for managing resources with lifetimes that
@@ -74,7 +76,7 @@ object ResourceScope {
   * All methods on this class are thread-safe up to disposal of the
   * `ResourceScope` itself.
   */
-final class ResourceScope(val name: String = "anonymous") {
+final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
   import ResourceScope._
 
   private val id = ctr.getAndIncrement()
@@ -360,7 +362,7 @@ final class ResourceScope(val name: String = "anonymous") {
     * }
     * }}}
     */
-  def unmanagedWithAssociatedScope[A](associatedScopeName: String)(f: ResourceScope => A): A = {
+  def unmanagedWithAssociatedScope[A](associatedScopeName: String = ResourceScope.anonymousScopeName)(f: ResourceScope => A): A = {
     val tmpScope = open(new ResourceScope(associatedScopeName))
     try {
       openUnmanaged(f(tmpScope), transitiveClose = List(tmpScope))
