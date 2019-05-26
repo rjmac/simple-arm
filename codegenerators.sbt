@@ -1,17 +1,17 @@
-mappings in (Compile, packageSrc) <++= (sourceManaged in Compile, managedSources in Compile) map { (base, srcs) =>
+mappings in (Compile, packageSrc) ++= {
   import Path.{flat, relativeTo}
-  println(srcs)
-  srcs x (relativeTo(base) | flat)
+  println((managedSources in Compile).value)
+  (managedSources in Compile).value pair (relativeTo((sourceManaged in Compile).value) | flat)
 }
 
-sourceGenerators in Compile <+= (baseDirectory, version) map { (baseDirectory, version) =>
-  if(!version.endsWith("-SNAPSHOT")) {
-    val in = scala.io.Source.fromFile(baseDirectory / "README.markdown.in")
+sourceGenerators in Compile += Def.task {
+  if(!version.value.endsWith("-SNAPSHOT")) {
+    val in = scala.io.Source.fromFile(baseDirectory.value / "README.markdown.in")
     try {
-      val out = new java.io.PrintWriter(baseDirectory / "README.markdown")
+      val out = new java.io.PrintWriter(baseDirectory.value / "README.markdown")
       try {
         for(line <- in.getLines()) {
-          out.println(line.replaceAll(java.util.regex.Pattern.quote("%VERSION%"), java.util.regex.Matcher.quoteReplacement(version)))
+          out.println(line.replaceAll(java.util.regex.Pattern.quote("%VERSION%"), java.util.regex.Matcher.quoteReplacement(version.value)))
         }
       } finally {
         out.close()
@@ -23,5 +23,5 @@ sourceGenerators in Compile <+= (baseDirectory, version) map { (baseDirectory, v
   Seq.empty[File]
 }
 
-sourceGenerators in Compile <+= (sourceManaged in Compile) map (GenPackage)
+sourceGenerators in Compile += Def.task { GenPackage((sourceManaged in Compile).value) }
 
