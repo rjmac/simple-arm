@@ -26,7 +26,7 @@ class UsingTests extends FunSuite with MustMatchers {
 
   test("Non-local return counts as a normal close") {
     implicit val res = makeResource()
-    def foo() {
+    def foo(): Unit = {
       using("hello", "goodbye") { (f, g) =>
         res.mark("inner")
         return

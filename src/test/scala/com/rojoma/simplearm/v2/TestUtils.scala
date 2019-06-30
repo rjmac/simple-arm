@@ -9,15 +9,15 @@ class TestResource[A] extends Resource[A] {
 
   def mark(s: String) = buffer += s
 
-  override def openBeforeTry(a: A) { mark("opening " + a + " before") }
-  override def openAfterTry(a: A) { mark("opening " + a + " after") }
-  def close(a: A) { mark("closing " + a  + " normally") }
-  override def closeAbnormally(a: A, ex: Throwable) { mark("closing " + a + " due to " + ex.getClass.getName) }
+  override def openBeforeTry(a: A): Unit = { mark("opening " + a + " before") }
+  override def openAfterTry(a: A): Unit = { mark("opening " + a + " after") }
+  def close(a: A): Unit = { mark("closing " + a  + " normally") }
+  override def closeAbnormally(a: A, ex: Throwable): Unit = { mark("closing " + a + " due to " + ex.getClass.getName) }
 }
 
 class Break extends Exception
 object Break {
-  def breaking[A](f: => A) {
+  def breaking[A](f: => A): Unit = {
     try {
       f
       throw new Exception("Did not break")
@@ -35,7 +35,7 @@ class Marker {
 
 class SomeCloseable(val marker: Marker) extends AutoCloseable {
   var closed = false
-  def close() {
+  def close(): Unit = {
     closed = false
   }
 }

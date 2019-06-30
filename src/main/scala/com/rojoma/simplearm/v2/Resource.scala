@@ -8,24 +8,24 @@ trait Resource[A] {
   /** Called after the resource is opened but before the managed value
     * is passed to the code which wants to use it.  If this throws (or
     * otherwise exits abnormally) the resource is NOT closed. */
-  def openBeforeTry(a: A) {}
+  def openBeforeTry(a: A): Unit = {}
   /** Called after the resource is opened but before the managed value
     * is passed to the code which wants to use it.  If this throws (or
     * otherwise exits abormally) the resource is closed. */
-  def openAfterTry(a: A) {}
+  def openAfterTry(a: A): Unit = {}
 
   /** Closes the resource when the user code exits normally or via
     * `ControlException` (e.g., `return`). */
-  def close(a: A)
+  def close(a: A): Unit
 
   /** Closes the resource when the user code exits via any
     * non-`ControlException`. */
-  def closeAbnormally(a: A, cause: Throwable) { close(a) }
+  def closeAbnormally(a: A, cause: Throwable): Unit = { close(a) }
 }
 
 sealed trait LowPriorityImplicits {
   // for legacy classes that have close() but do not implement AutoCloseable
-  type ReflectiveCloseable = { def close() }
+  type ReflectiveCloseable = { def close(): Unit }
   implicit def duckCloseResource[A <: ReflectiveCloseable] = new Resource[A] {
     import scala.language.reflectiveCalls
     def close(r: A) = r.close()
@@ -35,7 +35,7 @@ sealed trait LowPriorityImplicits {
 
 /** An instance of this must be implicitly visible in order to manage an ExecutorService. */
 abstract class ExecutorShutdownTimeout(val duration: Duration) {
-  def onTimeout(executorService: ExecutorService)
+  def onTimeout(executorService: ExecutorService): Unit
 }
 
 sealed trait MediumPriorityImplicits extends LowPriorityImplicits {
@@ -63,7 +63,7 @@ sealed trait MediumPriorityImplicits extends LowPriorityImplicits {
 
 object Resource extends MediumPriorityImplicits {
   object Noop extends Resource[Any] {
-    def close(a: Any) {}
+    def close(a: Any): Unit = {}
   }
 
   def executorShutdownTimeout(duration: FiniteDuration)(onTimeout: ExecutorService => Any): ExecutorShutdownTimeout = {
@@ -74,6 +74,6 @@ object Resource extends MediumPriorityImplicits {
   }
 
   val executorShutdownNoTimeout: ExecutorShutdownTimeout = new ExecutorShutdownTimeout(Duration.Inf) {
-    def onTimeout(executorService: ExecutorService) {}
+    def onTimeout(executorService: ExecutorService): Unit = {}
   }
 }

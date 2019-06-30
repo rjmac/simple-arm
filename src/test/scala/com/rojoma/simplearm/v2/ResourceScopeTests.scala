@@ -5,14 +5,14 @@ import scala.collection.mutable.HashSet
 
 import org.scalatest.FunSuite
 import org.scalatest.MustMatchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalacheck.{Gen, Arbitrary}
 import org.scalacheck.rng.Seed
 
 import Break._
 import SomeCloseableResource._
 
-class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
+class ResoureScopeTests extends FunSuite with MustMatchers with ScalaCheckPropertyChecks {
   def makeResource() = new TestResource[String]
 
   test("A resource is acquired and released") {
@@ -36,7 +36,7 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
 
   test("Non-local return counts as a normal close") {
     implicit val res = makeResource()
-    def foo() {
+    def foo(): Unit = {
       using(new ResourceScope) { rs =>
         rs.open("hello")
         rs.open("goodbye")
@@ -207,7 +207,7 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
 
     using(new ResourceScope) { rs =>
       val a = rs.open("a")
-      val b = rs.open("b")
+      rs.open("b")
       val c = rs.open("c", transitiveClose=List(a))
       val d = rs.open("d", transitiveClose=List(a))
       val e = rs.open("e", transitiveClose=List(c, d))
@@ -245,7 +245,7 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
   test("Resources get closed on scope-close even if one close does a non-local return") {
     implicit val res = new TestResource[String]
 
-    def foo() {
+    def foo(): Unit = {
       val rFoo = { () => return }
       using(new ResourceScope) { rs =>
         rs.open("a")
@@ -260,7 +260,7 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
   test("Resources get closed transitively even if one close does a non-local return") {
     implicit val res = new TestResource[String]
 
-    def foo() {
+    def foo(): Unit = {
       val rFoo = { () => return }
       val rs = new ResourceScope
       val a = rs.open("a")
@@ -273,14 +273,14 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
 
   class CloseableResource(val id: Int, val dependencies: Seq[CloseableResource]) extends AutoCloseable {
     var isClosed = false
-    def close() {
+    def close(): Unit = {
       isClosed must be (false)
       dependencies.foreach { x => x.isClosed must be (false) }
       isClosed = true
     }
-    def foreach[U](f: CloseableResource => U) {
+    def foreach[U](f: CloseableResource => U): Unit = {
       val seen = new HashSet[CloseableResource]
-      def loop(cr: CloseableResource) {
+      def loop(cr: CloseableResource): Unit = {
         if(!seen(cr)) {
           seen.add(cr)
           f(cr)
@@ -299,9 +299,9 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
     }
   }
 
-  def add(rs: ResourceScope, cr: CloseableResource, rng: Random) {
+  def add(rs: ResourceScope, cr: CloseableResource, rng: Random): Unit = {
     val seen = new HashSet[CloseableResource]
-    def loop(cr: CloseableResource) {
+    def loop(cr: CloseableResource): Unit = {
       if(!seen(cr)) {
         seen.add(cr)
         for(dep <- rng.shuffle(cr.dependencies)) loop(dep)
@@ -317,9 +317,9 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
     def nextLong() = { var (l, s) = rng.long; rng = s; l }
     def nonterminalGen(p: Gen.Parameters): Gen[CloseableResource] = {
       for(i <- 0 until nodeCount; nextDeps <- Gen.someOf(nodes).apply(p, Seed(nextLong())))
-	nodes += new CloseableResource(i, nextDeps)
+	nodes += new CloseableResource(i, nextDeps.to(Vector))
       for(nextDeps <- Gen.someOf(nodes)) yield
-	new CloseableResource(nodeCount, nextDeps)
+	new CloseableResource(nodeCount, nextDeps.to(Vector))
     }
     Gen.parameterized(nonterminalGen)
   }
@@ -382,7 +382,7 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
   test("Associated resources are closed when their parent unmanaged value is closed implicitly") {
     implicit val res = makeResource()
     using(new ResourceScope("test")) { rs =>
-      val result = rs.unmanagedWithAssociatedScope("inner") { rsi =>
+      rs.unmanagedWithAssociatedScope("inner") { rsi =>
           rsi.open("inner")
           new Object
         }
@@ -407,7 +407,7 @@ class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
   test("Associated resources are closed promptly when unmanagedWithAssociatedResourceScope exits early") {
     implicit val res = makeResource()
     using(new ResourceScope("test")) { rs =>
-      def foo() {
+      def foo(): Unit = {
         rs.unmanagedWithAssociatedScope("inner") { rsi =>
           rsi.open("inner")
           return

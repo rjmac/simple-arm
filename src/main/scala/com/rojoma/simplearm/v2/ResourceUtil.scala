@@ -3,7 +3,7 @@ package com.rojoma.simplearm.v2
 import scala.language.implicitConversions
 
 import java.io.{File, IOException}
-import java.nio.file.{Path, Paths, Files, SimpleFileVisitor, FileVisitResult}
+import java.nio.file.{Path, Files, SimpleFileVisitor, FileVisitResult}
 import java.nio.file.attribute
 
 import com.rojoma.simplearm.v2.{managed => mgd}
@@ -32,13 +32,13 @@ object ResourceUtil {
       implicit case object FilePathLike extends PathLike[File] {
         private[Temporary] val fileResource = new Resource[File] {
           private val ppr = PathPathLike.fileResource
-          override def close(dir: File) {
+          override def close(dir: File): Unit = {
             ppr.close(dir.toPath)
           }
         }
         private[Temporary] val directoryResource = new Resource[File] {
           private val ppr = PathPathLike.directoryResource
-          override def close(dir: File) {
+          override def close(dir: File): Unit = {
             ppr.close(dir.toPath)
           }
         }
@@ -62,7 +62,7 @@ object ResourceUtil {
             }
           }
 
-          override def close(dir: Path) {
+          override def close(dir: Path): Unit = {
             Files.walkFileTree(dir, visitor)
           }
         }

@@ -41,7 +41,7 @@ class ForComprehensionTests extends FunSuite with MustMatchers {
 
   test("A resource is closed normally if its .and returns") {
     implicit val res = makeResource()
-    def foo() {
+    def foo(): Unit = {
       for {
         f <- managed("a").and { _ => return }
       } {
@@ -66,7 +66,7 @@ class ForComprehensionTests extends FunSuite with MustMatchers {
 
   test("Non-local return counts as a normal close") {
     implicit val res = makeResource()
-    def foo() {
+    def foo(): Unit = {
       for {
         f <- managed("hello")
         g <- managed("goodbye")

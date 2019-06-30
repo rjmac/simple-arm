@@ -3,8 +3,6 @@ package com.rojoma.simplearm.v2
 import scala.collection.mutable.ArrayBuilder
 import scala.util.control.ControlThrowable
 import java.util.IdentityHashMap
-import scala.language.existentials
-import scala.annotation.tailrec
 
 object ResourceScope {
   private val ctr = new java.util.concurrent.atomic.AtomicLong
@@ -21,7 +19,7 @@ object ResourceScope {
 
   class Transferator[A] private[ResourceScope] (self: ResourceScope, value: A) {
     def from(rs: ResourceScope) = rs.transfer(value).to(self)
-    def to(rs: ResourceScope) {
+    def to(rs: ResourceScope): Unit = {
       if(self.id < rs.id) {
         self.synchronized {
           rs.synchronized {
@@ -87,7 +85,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
 
   // The main part of transferring a value from one scope to another;
   // at this point both locks are held.
-  private def transferFrom(that: ResourceScope, value: Any) {
+  private def transferFrom(that: ResourceScope, value: Any): Unit = {
     val allNodes = that.findTransitiveCloseNodes(value)
     if(allNodes eq null) throw new IllegalArgumentException("transfer of resource not managed by " + that.name)
     if(that eq this) { return }
@@ -122,11 +120,11 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
   private def complexFindTransitiveCloseNodes(node: Node[_]): Array[Node[_]] = {
     val seen = new java.util.HashSet[Node[_]]
     val result = new ArrayBuilder.ofRef[Node[_]]
-    def loop(value: Any) {
+    def loop(value: Any): Unit = {
       val node = managed.get(value)
       if((node ne null) && !seen.contains(node)) step(node)
     }
-    def step(node: Node[_]) {
+    def step(node: Node[_]): Unit = {
       seen.add(node)
       node.transitiveClose.foreach(loop)
       result += node
@@ -137,7 +135,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
 
   // called during a transfer by the receiving scope after the value
   // has been successfully added to its own managed map
-  private def unmanageNode(node: Node[_]) {
+  private def unmanageNode(node: Node[_]): Unit = {
     val n = managed.remove(node.value)
     if(n eq null) throw new IllegalArgumentException("unmanage of resource not managed by " + name)
     if(n ne node) throw new IllegalStateException(name + " manages node.value but not via node?")
@@ -249,7 +247,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
     *
     * @throws IllegalArgumentException if the value is not managed by this scope
     */
-  private[this] def closeImpl(value: Any, cause: Option[Throwable]) {
+  private[this] def closeImpl(value: Any, cause: Option[Throwable]): Unit = {
     val nodes = synchronized { findTransitiveCloseNodes(value) }
     if(nodes eq null) throw new IllegalArgumentException("close of resource not managed by " + name)
 
@@ -265,7 +263,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
       }
     }
 
-    def continueClosingAbnormally(lastPlusOne: Int, cause: Throwable) {
+    def continueClosingAbnormally(lastPlusOne: Int, cause: Throwable): Unit = {
       var i = lastPlusOne
       while(i != 0) {
         i -= 1
@@ -284,7 +282,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
       }
     }
 
-    def continueClosing(lastPlusOne: Int) {
+    def continueClosing(lastPlusOne: Int): Unit = {
       var i = lastPlusOne
       while(i != 0) {
         i -= 1
@@ -310,7 +308,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
     }
   }
 
-  def close(value: Any) {
+  def close(value: Any): Unit = {
     closeImpl(value, None)
   }
 
@@ -324,7 +322,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
 
   /** Closes all resources contained in this scope, in the reverse order
     * they were added. */
-  def close() {
+  def close(): Unit = {
     while(true) {
       val n = pop()
       if(n eq null) { return }
@@ -341,7 +339,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
     }
   }
 
-  private def closeAbnormally(cause: Throwable) {
+  private def closeAbnormally(cause: Throwable): Unit = {
     while(true) {
       val n = pop()
       if(n eq null) { return }
