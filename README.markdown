@@ -51,7 +51,7 @@ val y = for(r <- managed(...)) 5 // y is Int
 SBT:
 
 ```scala
-libraryDependencies += "com.rojoma" %% "simple-arm-v2" % "2.2.0"
+libraryDependencies += "com.rojoma" %% "simple-arm-v2" % "2.3.0"
 ```
 
 While for Maven, the pom snippets are:
@@ -61,7 +61,7 @@ While for Maven, the pom snippets are:
   <dependency>
     <groupId>com.rojoma</groupId>
     <artifactId>simple-arm-v2_${scala.version}</artifactId>
-    <version>2.2.0</version>
+    <version>2.3.0</version>
   </dependency>
 </dependencies>
 ```
