@@ -204,6 +204,14 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
   def openUnmanaged[T](value: => T, transitiveClose: Seq[Any] = Nil) =
     open(value, transitiveClose)(Resource.Noop.asInstanceOf[Resource[T]])
 
+  /** Registers an value with this scope with an ad-hoc cleanup operation.
+    *
+    * @throws IllegalArgumentException if the value is already managed by this scope,
+    *      or if any value listed in `transitiveClose` is not.
+    */
+  def withCleanup[T, U](value: => T, transitiveClose: Seq[Any] = Nil)(cleanup: T => U) =
+    open(value, transitiveClose)(new Resource[T] { override def close(t: T) = cleanup(t) })
+
   /** Un-manages a resource.  If this succeeds, the value will no
     * longer be managed at all.
     *

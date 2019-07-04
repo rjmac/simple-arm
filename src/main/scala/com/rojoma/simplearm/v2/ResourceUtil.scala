@@ -9,6 +9,9 @@ import java.nio.file.attribute
 import com.rojoma.simplearm.v2.{managed => mgd}
 
 object ResourceUtil {
+  def withCleanup[T, U](f: => T)(cleanup: T => U): Managed[T] =
+    mgd(f)(new Resource[T] { override def close(t: T) = cleanup(t) })
+
   /** Helpers to create temporary files.
     */
   object Temporary {
