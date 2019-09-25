@@ -185,7 +185,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
           case control: ControlThrowable =>
             throw control
           case t2: Throwable =>
-            t.addSuppressed(t2)
+            if(t ne t2) t.addSuppressed(t2)
         }
         throw t
     }
@@ -278,7 +278,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
               continueClosingAbnormally(i, cause)
               throw control
             case t: Throwable =>
-              cause.addSuppressed(t)
+              if(cause ne t) cause.addSuppressed(t)
           }
         }
       }
@@ -352,7 +352,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
           closeAbnormally(cause) // finish closing
           throw control
         case t: Throwable =>
-          cause.addSuppressed(t)
+          if(cause ne t) cause.addSuppressed(t)
       }
     }
   }
@@ -383,7 +383,7 @@ final class ResourceScope(val name: String = ResourceScope.anonymousScopeName) {
           closeImpl(tmpScope, Some(cause))
         } catch {
           case t: Throwable =>
-            cause.addSuppressed(t)
+            if(cause ne t) cause.addSuppressed(t)
         }
         throw cause
     }
