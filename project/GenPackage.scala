@@ -75,7 +75,7 @@ private def handleEx[A](resource: Resource[A], value: A, ex: Throwable): Nothing
         // "stop exception propagation and switch to the new control path"
         throw control
       case secondaryException: Throwable =>
-        e.addSuppressed(secondaryException)
+        if(e ne secondaryException) e.addSuppressed(secondaryException)
     }
     throw e
 }

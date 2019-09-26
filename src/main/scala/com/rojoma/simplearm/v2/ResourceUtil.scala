@@ -82,7 +82,7 @@ object ResourceUtil {
               ppr.close(path)
             } catch {
               case e2: Throwable =>
-                e.addSuppressed(e2)
+                if(e ne e2) e.addSuppressed(e2)
             }
             throw e
         }
@@ -126,7 +126,7 @@ object ResourceUtil {
               ppr.close(path)
             } catch {
               case e2: Throwable =>
-                e.addSuppressed(e2)
+                if(e ne e2) e.addSuppressed(e2)
             }
             throw e
         }

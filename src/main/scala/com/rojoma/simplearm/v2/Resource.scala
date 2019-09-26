@@ -26,6 +26,8 @@ trait Resource[A] {
 sealed trait LowPriorityImplicits {
   // for legacy classes that have close() but do not implement AutoCloseable
   type ReflectiveCloseable = { def close(): Unit }
+
+  @deprecated(message="Implement a specific instance of Resource for this type", since="2.3.1") // because of https://github.com/scala/bug/issues/11656
   implicit def duckCloseResource[A <: ReflectiveCloseable] = new Resource[A] {
     import scala.language.reflectiveCalls
     def close(r: A) = r.close()
