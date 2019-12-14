@@ -14,6 +14,6 @@ scalacOptions ++= Seq("-feature", "-deprecation")
 
 libraryDependencies ++= Seq(
   "com.rojoma" %% "simple-arm" % "1.2.0" % "optional",
-  "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
 )

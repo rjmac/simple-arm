@@ -5,14 +5,14 @@ import scala.collection.mutable.HashSet
 
 import org.scalatest.FunSuite
 import org.scalatest.MustMatchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalacheck.{Gen, Arbitrary}
 import org.scalacheck.rng.Seed
 
 import Break._
 import SomeCloseableResource._
 
-class ResoureScopeTests extends FunSuite with MustMatchers with PropertyChecks {
+class ResourceScopeTests extends FunSuite with MustMatchers with ScalaCheckPropertyChecks {
   def makeResource() = new TestResource[String]
 
   test("A resource is acquired and released") {
