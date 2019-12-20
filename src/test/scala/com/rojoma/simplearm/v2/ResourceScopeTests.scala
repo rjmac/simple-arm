@@ -12,7 +12,7 @@ import org.scalacheck.rng.Seed
 import Break._
 import SomeCloseableResource._
 
-class ResoureScopeTests extends FunSuite with MustMatchers with ScalaCheckPropertyChecks {
+class ResourceScopeTests extends FunSuite with MustMatchers with ScalaCheckPropertyChecks {
   def makeResource() = new TestResource[String]
 
   test("A resource is acquired and released") {

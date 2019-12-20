@@ -1,6 +1,7 @@
 package com.rojoma.simplearm.v2
 
 import java.lang.AutoCloseable
+import java.sql.Connection
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.util.concurrent.{ExecutorService, TimeUnit}
 
@@ -66,6 +67,34 @@ sealed trait MediumPriorityImplicits extends LowPriorityImplicits {
 object Resource extends MediumPriorityImplicits {
   object Noop extends Resource[Any] {
     def close(a: Any): Unit = {}
+  }
+
+  /** A Resource for a JDBC Connection.
+    *
+    * It is implementation-defined behavior to close a JDBC connection
+    * with an open transaction, and at least one database interprets
+    * that as "throw an exception if there is a pending transaction".
+    * This rolls back any pending transaction before closing the
+    * connection.  If the rollback throws, the close will still be
+    * attempted, and if the close also throws its exception will be
+    * added to the rollback exception's suppressed list.
+    */
+  implicit object connectionResource extends Resource[Connection] {
+    def close(conn: Connection): Unit = {
+      try {
+        if(!conn.getAutoCommit) conn.rollback()
+      } catch {
+        case e: Throwable =>
+          try {
+            conn.close()
+          } catch {
+            case e2: Throwable =>
+              e.addSuppressed(e2)
+          }
+          throw e
+      }
+      conn.close()
+    }
   }
 
   def executorShutdownTimeout(duration: FiniteDuration)(onTimeout: ExecutorService => Any): ExecutorShutdownTimeout = {
