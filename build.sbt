@@ -4,7 +4,7 @@ version := "2.3.1"
 
 organization := "com.rojoma"
 
-scalaVersion := "2.13.0"
+scalaVersion := "2.13.1"
 
 // crossScalaVersions := Seq("2.10.4", "2.11.2", "2.12.0", scalaVersion.value)
 
