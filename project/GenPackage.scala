@@ -12,6 +12,8 @@ object GenPackage extends (File => Seq[File]) {
     val formals = paramVars.zip(typeVars).map { case (p,t) => p + ": =>" + t }
     val evs = evVars.zip(typeVars).map { case (e,t) => e + ": Resource[" + t + "]" }
 
+    if(n == 1) sb.append("@inline ")
+
     sb.append("def using[").append(typeVars.mkString(", ")).append(", RR](").append(formals.mkString(", ")).append(")(f: (").append(typeVars.mkString(", ")).append(") => RR)(implicit ").append(evs.mkString(", ")).append("): RR = {\n")
 
     def loop(i: Int, indent: Int) {
