@@ -3,8 +3,6 @@ package com.rojoma.simplearm.v2
 import scala.collection.mutable.ArrayBuilder
 import scala.util.control.ControlThrowable
 import java.util.IdentityHashMap
-import scala.language.existentials
-import scala.annotation.tailrec
 
 object ResourceScope {
   private val ctr = new java.util.concurrent.atomic.AtomicLong

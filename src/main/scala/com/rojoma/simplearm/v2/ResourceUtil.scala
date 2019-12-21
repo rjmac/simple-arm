@@ -3,7 +3,7 @@ package com.rojoma.simplearm.v2
 import scala.language.implicitConversions
 
 import java.io.{File, IOException}
-import java.nio.file.{Path, Paths, Files, SimpleFileVisitor, FileVisitResult}
+import java.nio.file.{Path, Files, SimpleFileVisitor, FileVisitResult}
 import java.nio.file.attribute
 
 import com.rojoma.simplearm.v2.{managed => mgd}

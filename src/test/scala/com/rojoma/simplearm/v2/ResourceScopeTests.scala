@@ -207,7 +207,7 @@ class ResourceScopeTests extends FunSuite with MustMatchers with ScalaCheckPrope
 
     using(new ResourceScope) { rs =>
       val a = rs.open("a")
-      val b = rs.open("b")
+      val _ = rs.open("b")
       val c = rs.open("c", transitiveClose=List(a))
       val d = rs.open("d", transitiveClose=List(a))
       val e = rs.open("e", transitiveClose=List(c, d))
@@ -382,7 +382,7 @@ class ResourceScopeTests extends FunSuite with MustMatchers with ScalaCheckPrope
   test("Associated resources are closed when their parent unmanaged value is closed implicitly") {
     implicit val res = makeResource()
     using(new ResourceScope("test")) { rs =>
-      val result = rs.unmanagedWithAssociatedScope("inner") { rsi =>
+      val _ = rs.unmanagedWithAssociatedScope("inner") { rsi =>
           rsi.open("inner")
           new Object
         }
