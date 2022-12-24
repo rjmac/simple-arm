@@ -1,5 +1,10 @@
+/.bsp/
 /target/
 /project/boot/
 /project/target/
-/project/project/target/
+/project/project/
+/project/.bloop
+/project/metals.sbt
 /credentials.sbt
+/.bloop/
+/.metals/
